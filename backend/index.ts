@@ -20,13 +20,15 @@ router.ws('/paint', (ws, req) => {
     activeConnections[id] = ws;
     let username = 'Anonymous';
 
+    ws.send(JSON.stringify({type: 'WELCOME', payload: 'Hello you are connected to print service'}));
+
     ws.on('message', (message) => {
         const parsedMessage = JSON.parse(message.toString()) as IncomingMessage;
         if (parsedMessage.type === 'SET_USERNAME') {
             username = parsedMessage.payload;
         } else if (parsedMessage.type === 'SEND_MESSAGE') {
             Object.values(activeConnections).forEach((connection) => {
-                const outgoingMessage = {type: 'NEW_MESSAGE', payload: parsedMessage.payload};
+                const outgoingMessage = {type: 'NEW_MESSAGE', payload: {username, text: parsedMessage.payload}};
                 connection.send(JSON.stringify(outgoingMessage));
             })
         }
