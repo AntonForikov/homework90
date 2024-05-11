@@ -1,6 +1,7 @@
 import express from "express";
 import expressWs from "express-ws";
 import cors from "cors";
+import {ActiveConnections, IncomingMessage} from "./types";
 
 const app = express();
 expressWs(app);
@@ -11,12 +12,30 @@ app.use(cors());
 
 const router = express.Router();
 
-router.ws('/paint', (ws, req) => {
-  console.log('client connected');
+const activeConnections: ActiveConnections = {}
 
-  ws.on('close', () => {
-      console.log('client disconnected');
-  });
+router.ws('/paint', (ws, req) => {
+    const id = crypto.randomUUID();
+    console.log(`client connected! id - ${id}`);
+    activeConnections[id] = ws;
+    let username = 'Anonymous';
+
+    ws.on('message', (message) => {
+        const parsedMessage = JSON.parse(message.toString()) as IncomingMessage;
+        if (parsedMessage.type === 'SET_USERNAME') {
+            username = parsedMessage.payload;
+        } else if (parsedMessage.type === 'SEND_MESSAGE') {
+            Object.values(activeConnections).forEach((connection) => {
+                const outgoingMessage = {type: 'NEW_MESSAGE', payload: parsedMessage.payload};
+                connection.send(JSON.stringify(outgoingMessage));
+            })
+        }
+    });
+
+    ws.on('close', () => {
+        console.log(`client disconnected. id - ${id}`);
+        delete activeConnections[id];
+    });
 });
 
 app.use(router);
