@@ -1,16 +1,10 @@
-export interface ChatMessage {
-    username: string;
-    text: string;
+type Draw = {
+    context: CanvasRenderingContext2D;
+    currentPoint: Point;
+    prevPoint: Point | null
 }
 
-export interface IncomingChatMessage {
-    type: 'NEW_MESSAGE';
-    payload: ChatMessage;
+type Point = {
+    x: number;
+    y: number;
 }
-
-export interface IncomingWelcomeMessage {
-    type: 'WELCOME';
-    payload: ChatMessage;
-}
-
-export type IncomingMessage = IncomingChatMessage | IncomingWelcomeMessage;
