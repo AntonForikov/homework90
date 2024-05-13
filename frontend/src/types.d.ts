@@ -1,10 +1,5 @@
-type Draw = {
-    context: CanvasRenderingContext2D;
-    currentPoint: Point;
-    prevPoint: Point | null
-}
-
-type Point = {
+type Coordinates = {
+    color: string;
     x: number;
     y: number;
 }
