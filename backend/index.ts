@@ -37,6 +37,14 @@ router.ws('/paint', (ws) => {
         if (parsedMessage.type === 'NEW_USER') {
             ws.send(JSON.stringify({type: 'ALL_COORDINATE', payload: coordinates}));
         }
+        if (parsedMessage.type === 'REFRESH') {
+            coordinates = [];
+            Object.values(activeConnections).forEach((connection) => {
+                const outgoingMessage = {type: 'REFRESH'};
+                coordinates.push(parsedMessage.payload);
+                connection.send(JSON.stringify(outgoingMessage));
+            })
+        }
     });
 
     ws.on('close', () => {
