@@ -1,6 +1,6 @@
 import './App.css';
 import {ChromePicker} from 'react-color';
-import {useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import * as React from "react";
 
 function App() {
@@ -9,6 +9,14 @@ function App() {
 
     const ws = useRef<WebSocket | null>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+    const clear = () => {
+        // const canvas = canvasRef.current;
+        // if (!canvas) return;
+        // const context = canvas.getContext('2d');
+        // context?.clearRect(0, 0, canvas.width, canvas.height);
+        ws.current?.send(JSON.stringify({type: 'REFRESH'}));
+    };
 
     useEffect(() => {
         ws.current = new WebSocket('ws://127.0.0.1:8000/paint');
@@ -25,15 +33,28 @@ function App() {
             if (parsed.type === 'WELCOME') {
                 console.log(parsed.payload);
             }
+            if (parsed.type === 'REFRESH') {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const context = canvas.getContext('2d');
+                context?.clearRect(0, 0, canvas.width, canvas.height);
+                setCoordinates([]);
+            }
         });
         return () => {
             if (ws.current) ws.current?.close();
         };
     }, []);
 
-    useEffect(() => {
-        coordinates.forEach((coordinate) => circle(coordinate.x, coordinate.y, coordinate.color));
+    const setCircles = useCallback(() => {
+        if (coordinates.length > 0) coordinates.forEach((coordinate) => {
+            if (coordinate) circle(coordinate.x, coordinate.y, coordinate.color);
+        });
     }, [coordinates]);
+
+    useEffect(() => {
+        setCircles();
+    }, [setCircles]);
 
     const coordinatesToSend = (e: React.MouseEvent<HTMLCanvasElement>) => {
         if (canvasRef.current) {
@@ -62,6 +83,12 @@ function App() {
         >
             <div>
                 <ChromePicker color={color} onChange={(e) => setColor(e.hex)}/>
+                <button
+                    style={{marginTop: 15}}
+                    onClick={clear}
+                >
+                    Clear
+                </button>
             </div>
             <canvas
                 width={750}
