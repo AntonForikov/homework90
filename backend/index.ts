@@ -13,7 +13,7 @@ app.use(cors());
 const router = express.Router();
 
 const activeConnections: ActiveConnections = {};
-const coordinates: Coordinate[] = [];
+let coordinates: Coordinate[] = [];
 
 router.ws('/paint', (ws) => {
     const id = crypto.randomUUID();
@@ -42,6 +42,7 @@ router.ws('/paint', (ws) => {
     ws.on('close', () => {
         console.log(`client disconnected. id - ${id}`);
         delete activeConnections[id];
+        if (Object.keys(activeConnections).length === 0) coordinates = [];
     });
 });
 
